@@ -1,8 +1,9 @@
-﻿using GeoURPWebApi.Data;
+using GeoURPWebApi.Data;
 using GeoURPWebApi.DTOs;
 using GeoURPWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GeoURPWebApi.Controllers;
 
@@ -12,16 +13,35 @@ namespace GeoURPWebApi.Controllers;
 public sealed class ExamCategoriesController : ControllerBase
 {
     [HttpGet]
-    public ActionResult<ApiResponse<IEnumerable<ExamCategory>>> GetAll([FromServices] InMemoryStore store)
-        => Ok(ApiResponse<IEnumerable<ExamCategory>>.Ok(store.ExamCategories.OrderBy(x => x.Id).ToList()));
+    public async Task<ActionResult<ApiResponse<IEnumerable<ExamCategory>>>> GetAll([FromServices] AppDbContext db)
+        => Ok(ApiResponse<IEnumerable<ExamCategory>>.Ok(await db.ExamCategories.OrderBy(x => x.Id).ToListAsync()));
+
     [HttpPost]
-    public ActionResult<ApiResponse<ExamCategory>> Create([FromBody] ExamCategory request, [FromServices] InMemoryStore store)
-    { request.Id = NextId(store.ExamCategories.Select(x => x.Id)); store.ExamCategories.Add(request); return CreatedAtAction(nameof(GetAll), ApiResponse<ExamCategory>.Ok(request, "Categoría creada")); }
+    public async Task<ActionResult<ApiResponse<ExamCategory>>> Create([FromBody] ExamCategory request, [FromServices] AppDbContext db)
+    {
+        db.ExamCategories.Add(request);
+        await db.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetAll), ApiResponse<ExamCategory>.Ok(request, "Categoría creada"));
+    }
+
     [HttpPut("{id:int}")]
-    public ActionResult<ApiResponse<ExamCategory>> Update(int id, [FromBody] ExamCategory request, [FromServices] InMemoryStore store)
-    { var c = store.ExamCategories.FirstOrDefault(x => x.Id == id); if (c is null) return NotFound(ApiResponse<ExamCategory>.Fail("No existe la categoría")); c.Name = request.Name; c.IsActive = request.IsActive; return Ok(ApiResponse<ExamCategory>.Ok(c, "Categoría actualizada")); }
+    public async Task<ActionResult<ApiResponse<ExamCategory>>> Update(int id, [FromBody] ExamCategory request, [FromServices] AppDbContext db)
+    {
+        var c = await db.ExamCategories.FirstOrDefaultAsync(x => x.Id == id);
+        if (c is null) return NotFound(ApiResponse<ExamCategory>.Fail("No existe la categoría"));
+        c.Name = request.Name;
+        c.IsActive = request.IsActive;
+        await db.SaveChangesAsync();
+        return Ok(ApiResponse<ExamCategory>.Ok(c, "Categoría actualizada"));
+    }
+
     [HttpDelete("{id:int}")]
-    public ActionResult Delete(int id, [FromServices] InMemoryStore store)
-    { var c = store.ExamCategories.FirstOrDefault(x => x.Id == id); if (c is null) return NotFound(); store.ExamCategories.Remove(c); return NoContent(); }
-    private static int NextId(IEnumerable<int> ids) => ids.Any() ? ids.Max() + 1 : 1;
+    public async Task<ActionResult> Delete(int id, [FromServices] AppDbContext db)
+    {
+        var c = await db.ExamCategories.FirstOrDefaultAsync(x => x.Id == id);
+        if (c is null) return NotFound();
+        db.ExamCategories.Remove(c);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
 }
