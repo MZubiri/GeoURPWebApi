@@ -1,8 +1,9 @@
-﻿using GeoURPWebApi.Data;
+using GeoURPWebApi.Data;
 using GeoURPWebApi.DTOs;
 using GeoURPWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GeoURPWebApi.Controllers;
 
@@ -12,40 +13,47 @@ public sealed class ResearchController : ControllerBase
 {
     [AllowAnonymous]
     [HttpGet("public/research")]
-    public ActionResult<ApiResponse<IEnumerable<Research>>> GetPublic([FromServices] InMemoryStore store)
-        => Ok(ApiResponse<IEnumerable<Research>>.Ok(store.Researches.Where(x => x.IsActive).OrderByDescending(x => x.PublishedAt).ToList()));
+    public async Task<ActionResult<ApiResponse<IEnumerable<Research>>>> GetPublic([FromServices] AppDbContext db)
+        => Ok(ApiResponse<IEnumerable<Research>>.Ok(await db.Researches.Where(x => x.IsActive).OrderByDescending(x => x.PublishedAt).ToListAsync()));
 
     [Authorize(Roles = "Admin,Editor")]
     [HttpGet("admin/research")]
-    public ActionResult<ApiResponse<IEnumerable<Research>>> GetAdmin([FromServices] InMemoryStore store)
-        => Ok(ApiResponse<IEnumerable<Research>>.Ok(store.Researches.OrderByDescending(x => x.PublishedAt).ToList()));
+    public async Task<ActionResult<ApiResponse<IEnumerable<Research>>>> GetAdmin([FromServices] AppDbContext db)
+        => Ok(ApiResponse<IEnumerable<Research>>.Ok(await db.Researches.OrderByDescending(x => x.PublishedAt).ToListAsync()));
 
     [Authorize(Roles = "Admin,Editor")]
     [HttpPost("admin/research")]
-    public ActionResult<ApiResponse<Research>> Create([FromBody] Research request, [FromServices] InMemoryStore store)
+    public async Task<ActionResult<ApiResponse<Research>>> Create([FromBody] Research request, [FromServices] AppDbContext db)
     {
-        request.Id = NextId(store.Researches.Select(x => x.Id)); store.Researches.Add(request);
+        db.Researches.Add(request);
+        await db.SaveChangesAsync();
         return CreatedAtAction(nameof(GetAdmin), ApiResponse<Research>.Ok(request, "Investigación creada"));
     }
 
     [Authorize(Roles = "Admin,Editor")]
     [HttpPut("admin/research/{id:int}")]
-    public ActionResult<ApiResponse<Research>> Update(int id, [FromBody] Research request, [FromServices] InMemoryStore store)
+    public async Task<ActionResult<ApiResponse<Research>>> Update(int id, [FromBody] Research request, [FromServices] AppDbContext db)
     {
-        var current = store.Researches.FirstOrDefault(x => x.Id == id);
+        var current = await db.Researches.FirstOrDefaultAsync(x => x.Id == id);
         if (current is null) return NotFound(ApiResponse<Research>.Fail("No existe la investigación"));
-        current.Title = request.Title; current.Summary = request.Summary; current.FileUrl = request.FileUrl; current.CategoryId = request.CategoryId; current.PublishedAt = request.PublishedAt; current.IsActive = request.IsActive;
+        current.Title = request.Title;
+        current.Summary = request.Summary;
+        current.FileUrl = request.FileUrl;
+        current.CategoryId = request.CategoryId;
+        current.PublishedAt = request.PublishedAt;
+        current.IsActive = request.IsActive;
+        await db.SaveChangesAsync();
         return Ok(ApiResponse<Research>.Ok(current, "Investigación actualizada"));
     }
 
     [Authorize(Roles = "Admin")]
     [HttpDelete("admin/research/{id:int}")]
-    public ActionResult Delete(int id, [FromServices] InMemoryStore store)
+    public async Task<ActionResult> Delete(int id, [FromServices] AppDbContext db)
     {
-        var current = store.Researches.FirstOrDefault(x => x.Id == id);
+        var current = await db.Researches.FirstOrDefaultAsync(x => x.Id == id);
         if (current is null) return NotFound();
-        store.Researches.Remove(current); return NoContent();
+        db.Researches.Remove(current);
+        await db.SaveChangesAsync();
+        return NoContent();
     }
-
-    private static int NextId(IEnumerable<int> ids) => ids.Any() ? ids.Max() + 1 : 1;
 }
