@@ -1,0 +1,11 @@
+﻿namespace GeoURPWebApi.DTOs
+{
+    public sealed class CalendarItemResponse
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public DateTime StartAt { get; set; }
+        public DateTime EndAt { get; set; }
+        public string Location { get; set; } = string.Empty;
+    }
+}
