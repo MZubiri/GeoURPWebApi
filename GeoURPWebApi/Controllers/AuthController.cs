@@ -20,7 +20,7 @@ public sealed class AuthController : ControllerBase
         var user = await db.Users
             .Include(x => x.UserRoles)
             .ThenInclude(x => x.Role)
-            .FirstOrDefaultAsync(x => x.Email == request.Email && x.Password == request.Password && x.IsActive);
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == request.Email.Trim().ToLower() && x.Password == request.Password && x.IsActive);
 
         if (user is null)
         {
