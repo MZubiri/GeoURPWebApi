@@ -47,6 +47,28 @@ public sealed class BoardMembersController : ControllerBase
     }
 
     [AllowAnonymous]
+    [HttpPatch("admin/board-members/{id:int}/activate")]
+    public async Task<ActionResult<ApiResponse<BoardMember>>> Activate(int id, [FromServices] AppDbContext db)
+    {
+        var current = await db.BoardMembers.FirstOrDefaultAsync(x => x.Id == id);
+        if (current is null) return NotFound(ApiResponse<BoardMember>.Fail("No existe el directivo"));
+        current.IsActive = true;
+        await db.SaveChangesAsync();
+        return Ok(ApiResponse<BoardMember>.Ok(current, "Directivo activado"));
+    }
+
+    [AllowAnonymous]
+    [HttpPatch("admin/board-members/{id:int}/deactivate")]
+    public async Task<ActionResult<ApiResponse<BoardMember>>> Deactivate(int id, [FromServices] AppDbContext db)
+    {
+        var current = await db.BoardMembers.FirstOrDefaultAsync(x => x.Id == id);
+        if (current is null) return NotFound(ApiResponse<BoardMember>.Fail("No existe el directivo"));
+        current.IsActive = false;
+        await db.SaveChangesAsync();
+        return Ok(ApiResponse<BoardMember>.Ok(current, "Directivo desactivado"));
+    }
+
+    [AllowAnonymous]
     [HttpDelete("admin/board-members/{id:int}")]
     public async Task<ActionResult> Delete(int id, [FromServices] AppDbContext db)
     {
