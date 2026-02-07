@@ -1,4 +1,6 @@
-﻿namespace GeoURPWebApi.Models
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GeoURPWebApi.Models
 {
     public sealed class User
     {
@@ -7,7 +9,10 @@
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
-        public List<string> Roles { get; set; } = [];
-    }
 
+        [NotMapped]
+        public List<string> Roles { get; set; } = [];
+
+        public List<UserRole> UserRoles { get; set; } = [];
+    }
 }
