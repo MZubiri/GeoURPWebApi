@@ -7,17 +7,22 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- JWT -->
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
 
+		<!-- Swagger / OpenAPI -->
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+		<PackageReference Include="Microsoft.OpenApi" Version="1.6.14" />
+
+		<!-- JWT Core -->
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
+
+		<!-- EF Core (si usas DBContext, que sí lo usas) -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
 	</ItemGroup>
 
 </Project>
-
