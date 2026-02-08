@@ -9,6 +9,7 @@ namespace GeoURPWebApi.Controllers;
 
 [ApiController]
 [Route("api/v1")]
+[Authorize(Roles = "Admin,Editor")]
 public sealed class BoardMembersController : ControllerBase
 {
     [AllowAnonymous]
@@ -16,12 +17,10 @@ public sealed class BoardMembersController : ControllerBase
     public async Task<ActionResult<ApiResponse<IEnumerable<BoardMember>>>> GetPublic([FromServices] AppDbContext db)
         => Ok(ApiResponse<IEnumerable<BoardMember>>.Ok(await db.BoardMembers.Where(x => x.IsActive).OrderBy(x => x.SortOrder).ToListAsync()));
 
-    [AllowAnonymous]
     [HttpGet("admin/board-members")]
     public async Task<ActionResult<ApiResponse<IEnumerable<BoardMember>>>> GetAdmin([FromServices] AppDbContext db)
         => Ok(ApiResponse<IEnumerable<BoardMember>>.Ok(await db.BoardMembers.OrderBy(x => x.SortOrder).ToListAsync()));
 
-    [AllowAnonymous]
     [HttpPost("admin/board-members")]
     public async Task<ActionResult<ApiResponse<BoardMember>>> Create([FromBody] BoardMember request, [FromServices] AppDbContext db)
     {
@@ -30,7 +29,6 @@ public sealed class BoardMembersController : ControllerBase
         return CreatedAtAction(nameof(GetAdmin), ApiResponse<BoardMember>.Ok(request, "Directivo creado"));
     }
 
-    [AllowAnonymous]
     [HttpPut("admin/board-members/{id:int}")]
     public async Task<ActionResult<ApiResponse<BoardMember>>> Update(int id, [FromBody] BoardMember request, [FromServices] AppDbContext db)
     {
@@ -46,7 +44,6 @@ public sealed class BoardMembersController : ControllerBase
         return Ok(ApiResponse<BoardMember>.Ok(current, "Directivo actualizado"));
     }
 
-    [AllowAnonymous]
     [HttpPatch("admin/board-members/{id:int}/activate")]
     public async Task<ActionResult<ApiResponse<BoardMember>>> Activate(int id, [FromServices] AppDbContext db)
     {
@@ -57,7 +54,6 @@ public sealed class BoardMembersController : ControllerBase
         return Ok(ApiResponse<BoardMember>.Ok(current, "Directivo activado"));
     }
 
-    [AllowAnonymous]
     [HttpPatch("admin/board-members/{id:int}/deactivate")]
     public async Task<ActionResult<ApiResponse<BoardMember>>> Deactivate(int id, [FromServices] AppDbContext db)
     {
@@ -68,7 +64,6 @@ public sealed class BoardMembersController : ControllerBase
         return Ok(ApiResponse<BoardMember>.Ok(current, "Directivo desactivado"));
     }
 
-    [AllowAnonymous]
     [HttpDelete("admin/board-members/{id:int}")]
     public async Task<ActionResult> Delete(int id, [FromServices] AppDbContext db)
     {
