@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Production / Publish artifacts
+publish/
+publish_prod/
+GeoURPWebApi/publish-prod/
+*.tar.gz

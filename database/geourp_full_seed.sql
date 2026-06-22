@@ -18,6 +18,8 @@ GO
    LIMPIEZA (idempotente para rehacer script)
    ========================================================= */
 IF OBJECT_ID('dbo.UserRoles', 'U') IS NOT NULL DROP TABLE dbo.UserRoles;
+IF OBJECT_ID('dbo.InterviewAppointments', 'U') IS NOT NULL DROP TABLE dbo.InterviewAppointments;
+IF OBJECT_ID('dbo.InterviewSlots', 'U') IS NOT NULL DROP TABLE dbo.InterviewSlots;
 IF OBJECT_ID('dbo.ContactMessages', 'U') IS NOT NULL DROP TABLE dbo.ContactMessages;
 IF OBJECT_ID('dbo.Books', 'U') IS NOT NULL DROP TABLE dbo.Books;
 IF OBJECT_ID('dbo.BookCategories', 'U') IS NOT NULL DROP TABLE dbo.BookCategories;
@@ -70,6 +72,9 @@ CREATE TABLE dbo.BoardMembers
     Id        INT IDENTITY(1,1) PRIMARY KEY,
     FullName  NVARCHAR(200) NOT NULL,
     Position  NVARCHAR(120) NOT NULL,
+    Email     NVARCHAR(150) NULL,
+    Code      NVARCHAR(50) NULL,
+    Birthday  NVARCHAR(5) NULL,
     PhotoUrl  NVARCHAR(500) NOT NULL,
     Bio       NVARCHAR(1000) NOT NULL,
     SortOrder INT NOT NULL,
@@ -169,6 +174,35 @@ CREATE TABLE dbo.ContactMessages
 );
 GO
 
+CREATE TABLE dbo.InterviewSlots
+(
+    Id        INT IDENTITY(1,1) PRIMARY KEY,
+    [Date]    DATE NOT NULL,
+    StartTime TIME(0) NOT NULL,
+    EndTime   TIME(0) NOT NULL,
+    Capacity  INT NOT NULL CONSTRAINT DF_InterviewSlots_Capacity DEFAULT (1),
+    CreatedAt DATETIME2(0) NOT NULL CONSTRAINT DF_InterviewSlots_CreatedAt DEFAULT (SYSUTCDATETIME()),
+    CONSTRAINT CK_InterviewSlots_Capacity CHECK (Capacity > 0),
+    CONSTRAINT CK_InterviewSlots_StartEnd CHECK (EndTime > StartTime),
+    CONSTRAINT UQ_InterviewSlots_DateTime UNIQUE ([Date], StartTime, EndTime)
+);
+GO
+
+CREATE TABLE dbo.InterviewAppointments
+(
+    Id        INT IDENTITY(1,1) PRIMARY KEY,
+    SlotId    INT NOT NULL,
+    FullName  NVARCHAR(200) NOT NULL,
+    Phone     NVARCHAR(50) NOT NULL,
+    Email     NVARCHAR(180) NOT NULL,
+    Major     NVARCHAR(180) NOT NULL,
+    Cycle     NVARCHAR(60) NOT NULL,
+    Status    NVARCHAR(50) NOT NULL CONSTRAINT DF_InterviewAppointments_Status DEFAULT (N'Registrada'),
+    CreatedAt DATETIME2(0) NOT NULL CONSTRAINT DF_InterviewAppointments_CreatedAt DEFAULT (SYSUTCDATETIME()),
+    CONSTRAINT FK_InterviewAppointments_InterviewSlots FOREIGN KEY (SlotId) REFERENCES dbo.InterviewSlots(Id) ON DELETE CASCADE
+);
+GO
+
 /* =========================================================
    DATOS DE PRUEBA
    ========================================================= */
@@ -207,6 +241,29 @@ VALUES
 (2, N'Mg. Luis Herrera', N'Secretario', N'https://images.unsplash.com/photo-1500648767791-00dcc994a43e', N'Coordinador académico y de calidad.', 2, 1),
 (3, N'Dr. Pablo Mejía', N'Vocal', N'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e', N'Investigador en planeamiento territorial.', 3, 1);
 SET IDENTITY_INSERT dbo.BoardMembers OFF;
+GO
+
+UPDATE dbo.BoardMembers
+SET
+    Email = CASE Id
+        WHEN 1 THEN N'carmen.ruiz@geourp.local'
+        WHEN 2 THEN N'luis.herrera@geourp.local'
+        WHEN 3 THEN N'pablo.mejia@geourp.local'
+        ELSE Email
+    END,
+    Code = CASE Id
+        WHEN 1 THEN N'2025001'
+        WHEN 2 THEN N'2025002'
+        WHEN 3 THEN N'2025003'
+        ELSE Code
+    END,
+    Birthday = CASE Id
+        WHEN 1 THEN N'15/03'
+        WHEN 2 THEN N'22/07'
+        WHEN 3 THEN N'09/11'
+        ELSE Birthday
+    END
+WHERE Id IN (1, 2, 3);
 GO
 
 SET IDENTITY_INSERT dbo.Events ON;
@@ -280,6 +337,18 @@ VALUES
 SET IDENTITY_INSERT dbo.ContactMessages OFF;
 GO
 
+INSERT INTO dbo.InterviewSlots ([Date], StartTime, EndTime, Capacity)
+VALUES
+(CONVERT(DATE, DATEADD(DAY, 1, SYSUTCDATETIME())), '09:00', '09:30', 3),
+(CONVERT(DATE, DATEADD(DAY, 1, SYSUTCDATETIME())), '09:30', '10:00', 2),
+(CONVERT(DATE, DATEADD(DAY, 2, SYSUTCDATETIME())), '15:00', '15:30', 4);
+GO
+
+INSERT INTO dbo.InterviewAppointments (SlotId, FullName, Phone, Email, Major, Cycle, Status, CreatedAt)
+VALUES
+(1, N'Lucía Ramos', N'999888777', N'lucia.ramos@email.test', N'Geografía', N'8', N'Registrada', DATEADD(HOUR, -6, SYSUTCDATETIME()));
+GO
+
 /* =========================================================
    CONSULTAS RÁPIDAS DE VERIFICACIÓN
    ========================================================= */
@@ -294,5 +363,7 @@ UNION ALL SELECT 'ExamCategories', COUNT(1) FROM dbo.ExamCategories
 UNION ALL SELECT 'Exams', COUNT(1) FROM dbo.Exams
 UNION ALL SELECT 'BookCategories', COUNT(1) FROM dbo.BookCategories
 UNION ALL SELECT 'Books', COUNT(1) FROM dbo.Books
-UNION ALL SELECT 'ContactMessages', COUNT(1) FROM dbo.ContactMessages;
+UNION ALL SELECT 'ContactMessages', COUNT(1) FROM dbo.ContactMessages
+UNION ALL SELECT 'InterviewSlots', COUNT(1) FROM dbo.InterviewSlots
+UNION ALL SELECT 'InterviewAppointments', COUNT(1) FROM dbo.InterviewAppointments;
 GO

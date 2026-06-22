@@ -1,4 +1,4 @@
-﻿using GeoURPWebApi.Models;
+using GeoURPWebApi.Models;
 
 namespace GeoURPWebApi.Data;
 
@@ -16,10 +16,10 @@ public sealed class InMemoryStore
         new User { Id = 2, Name = "Editor", Email = "editor@geourp.local", Password = "Editor123*", Roles = ["Editor"] }
     ];
 
-    public List<BoardMember> BoardMembers { get; } =
+    public List<User> BoardMembers { get; } =
     [
-        new BoardMember { Id = 1, FullName = "Dra. Carmen Ruiz", Position = "Presidenta", PhotoUrl = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80", Bio = "Especialista en gestión universitaria.", SortOrder = 1, IsActive = true },
-        new BoardMember { Id = 2, FullName = "Mg. Luis Herrera", Position = "Secretario", PhotoUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e", Bio = "Coordinador académico y de calidad.", SortOrder = 2, IsActive = true }
+        new User { Id = 3, Name = "Dra. Carmen Ruiz", Position = "Presidenta", PhotoUrl = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80", Bio = "Especialista en gestión universitaria.", SortOrder = 1, IsActive = true },
+        new User { Id = 4, Name = "Mg. Luis Herrera", Position = "Secretario", PhotoUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e", Bio = "Coordinador académico y de calidad.", SortOrder = 2, IsActive = true }
     ];
 
     public List<Event> Events { get; } =

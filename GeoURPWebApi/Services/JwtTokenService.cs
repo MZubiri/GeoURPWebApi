@@ -1,4 +1,4 @@
-﻿using GeoURPWebApi.DTOs;
+using GeoURPWebApi.DTOs;
 using GeoURPWebApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,7 +16,7 @@ public sealed class JwtTokenService
         _configuration = configuration;
     }
 
-    public LoginResponse Generate(User user)
+    public LoginResponse Generate(User user, bool canAccessMembers, bool canAccessUsers, bool canApproveRegistrations)
     {
         var key = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT key missing");
         var issuer = _configuration["Jwt:Issuer"] ?? "GeoURP.WebApi";
@@ -27,7 +27,10 @@ public sealed class JwtTokenService
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email),
-            new(JwtRegisteredClaimNames.Name, user.Name)
+            new(JwtRegisteredClaimNames.Name, user.Name),
+            new("geo_can_access_members", canAccessMembers ? "true" : "false"),
+            new("geo_can_access_users", canAccessUsers ? "true" : "false"),
+            new("geo_can_approve_registrations", canApproveRegistrations ? "true" : "false")
         };
 
         claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
