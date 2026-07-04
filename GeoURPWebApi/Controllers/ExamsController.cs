@@ -1,4 +1,4 @@
-﻿using GeoURPWebApi.Data;
+using GeoURPWebApi.Data;
 using GeoURPWebApi.DTOs;
 using GeoURPWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -18,12 +18,12 @@ public sealed class ExamsController : ControllerBase
     [AllowAnonymous]
     [HttpGet("public/exams")]
     public async Task<ActionResult<ApiResponse<IEnumerable<Exam>>>> GetPublic([FromServices] AppDbContext db)
-        => Ok(ApiResponse<IEnumerable<Exam>>.Ok(await db.Exams.Where(x => x.IsActive).OrderByDescending(x => x.Date).ToListAsync()));
+        => Ok(ApiResponse<IEnumerable<Exam>>.Ok(await db.Exams.Where(x => x.IsActive).OrderByDescending(x => x.Id).ToListAsync()));
 
     [Authorize(Roles = "Admin,Editor")]
     [HttpGet("admin/exams")]
     public async Task<ActionResult<ApiResponse<IEnumerable<Exam>>>> GetAdmin([FromServices] AppDbContext db)
-        => Ok(ApiResponse<IEnumerable<Exam>>.Ok(await db.Exams.OrderByDescending(x => x.Date).ToListAsync()));
+        => Ok(ApiResponse<IEnumerable<Exam>>.Ok(await db.Exams.OrderByDescending(x => x.Id).ToListAsync()));
 
     [Authorize(Roles = "Admin,Editor")]
     [HttpPost("admin/exams/upload-file")]
@@ -99,9 +99,13 @@ public sealed class ExamsController : ControllerBase
     {
         var current = await db.Exams.FirstOrDefaultAsync(x => x.Id == id);
         if (current is null) return NotFound(ApiResponse<Exam>.Fail("No existe el examen"));
-        current.Title = request.Title;
-        current.Description = request.Description;
-        current.Date = request.Date;
+        current.Ciclo = request.Ciclo;
+        current.Curso = request.Curso;
+        current.Tipo = request.Tipo;
+        current.Periodo = request.Periodo;
+        current.Docente = request.Docente;
+        current.Resuelto = request.Resuelto;
+        current.Nota = request.Nota;
         current.FileUrl = request.FileUrl;
         current.CategoryId = request.CategoryId;
         current.IsActive = request.IsActive;

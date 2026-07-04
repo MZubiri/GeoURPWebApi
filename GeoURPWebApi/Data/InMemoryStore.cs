@@ -38,7 +38,7 @@ public sealed class InMemoryStore
 
     public List<Exam> Exams { get; } =
     [
-        new Exam { Id = 1, Title = "Examen parcial 1", Description = "Evaluación de cartografía", Date = DateTime.UtcNow.AddDays(10), FileUrl = "https://example.com/exam.pdf", CategoryId = 1, IsActive = true }
+        new Exam { Id = 1, Ciclo = "I", Curso = "Introducción a SIG", Tipo = "Parcial", Periodo = "2024-I", Docente = "Juan Pérez", Resuelto = true, Nota = 15.5, FileUrl = "https://example.com/exam.pdf", CategoryId = 1, IsActive = true }
     ];
 
     public List<Book> Books { get; } =

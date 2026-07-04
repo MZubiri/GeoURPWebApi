@@ -21,6 +21,61 @@ public sealed class BooksController : ControllerBase
     public async Task<ActionResult<ApiResponse<IEnumerable<Book>>>> GetAdmin([FromServices] AppDbContext db)
         => Ok(ApiResponse<IEnumerable<Book>>.Ok(await db.Books.OrderByDescending(x => x.Year).ToListAsync()));
 
+    private static readonly string[] AllowedExtensions = { ".pdf", ".zip" };
+    private static readonly string[] AllowedContentTypes = { "application/pdf", "application/zip", "application/x-zip-compressed" };
+    private const long MaxFileSize = 500 * 1024 * 1024; // 500MB
+
+    [Authorize(Roles = "Admin,Editor")]
+    [HttpPost("admin/books/upload-file")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<ApiResponse<string>>> UploadFile([FromForm] IFormFile file)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(ApiResponse<string>.Fail("No se ha proporcionado ningún archivo"));
+            }
+
+            if (file.Length > MaxFileSize)
+            {
+                return BadRequest(ApiResponse<string>.Fail($"El archivo excede el tamaño máximo permitido de {MaxFileSize / 1024 / 1024}MB"));
+            }
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(extension))
+            {
+                return BadRequest(ApiResponse<string>.Fail($"Extensión no permitida. Solo se permiten: {string.Join(", ", AllowedExtensions)}"));
+            }
+
+            if (!AllowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
+            {
+                return BadRequest(ApiResponse<string>.Fail($"Tipo de contenido no permitido. Solo se permiten: {string.Join(", ", AllowedContentTypes)}"));
+            }
+
+            var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "library", "books");
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+
+            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadPath, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var publicUrl = $"/uploads/library/books/{uniqueFileName}";
+            return Ok(ApiResponse<string>.Ok(publicUrl, "Archivo subido correctamente"));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<string>.Fail("Error inesperado al subir el archivo", ex.Message));
+        }
+    }
+
     [Authorize(Roles = "Admin,Editor")]
     [HttpPost("admin/books")]
     public async Task<ActionResult<ApiResponse<Book>>> Create([FromBody] Book request, [FromServices] AppDbContext db)
