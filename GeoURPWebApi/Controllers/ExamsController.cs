@@ -11,8 +11,16 @@ namespace GeoURPWebApi.Controllers;
 [Route("api/v1")]
 public sealed class ExamsController : ControllerBase
 {
-    private static readonly string[] AllowedExtensions = { ".pdf", ".zip" };
-    private static readonly string[] AllowedContentTypes = { "application/pdf", "application/zip", "application/x-zip-compressed" };
+    private static readonly string[] AllowedExtensions = { ".pdf", ".zip", ".rar", ".doc", ".docx" };
+    private static readonly string[] AllowedContentTypes = { 
+        "application/pdf", 
+        "application/zip", 
+        "application/x-zip-compressed",
+        "application/x-rar-compressed",
+        "application/vnd.rar",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+    };
     private const long MaxFileSize = 500 * 1024 * 1024; // 500MB
 
     [AllowAnonymous]

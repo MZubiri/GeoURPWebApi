@@ -21,8 +21,16 @@ public sealed class BooksController : ControllerBase
     public async Task<ActionResult<ApiResponse<IEnumerable<Book>>>> GetAdmin([FromServices] AppDbContext db)
         => Ok(ApiResponse<IEnumerable<Book>>.Ok(await db.Books.OrderByDescending(x => x.Year).ToListAsync()));
 
-    private static readonly string[] AllowedExtensions = { ".pdf", ".zip" };
-    private static readonly string[] AllowedContentTypes = { "application/pdf", "application/zip", "application/x-zip-compressed" };
+    private static readonly string[] AllowedExtensions = { ".pdf", ".zip", ".rar", ".doc", ".docx" };
+    private static readonly string[] AllowedContentTypes = { 
+        "application/pdf", 
+        "application/zip", 
+        "application/x-zip-compressed",
+        "application/x-rar-compressed",
+        "application/vnd.rar",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+    };
     private const long MaxFileSize = 500 * 1024 * 1024; // 500MB
 
     [Authorize(Roles = "Admin,Editor")]
